@@ -1,177 +1,85 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Jobs | Tilson Scaffolding Bookings</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/css/molle.css">
-  <link rel="stylesheet" href="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/css/bootstrap.css">
-  <link rel="stylesheet" href="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/font-awesome-4.2.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/css/radmin.css">
-  <link rel="stylesheet" href="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/css/radmin-responsive.css">
-  <link rel="stylesheet" href="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/css/responsive-tables.css">
-  <link rel="stylesheet" href="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/css/custom-theme/jquery-ui-1.8.9.custom.css">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body style="visibility: visible; background:#6BBBCB; padding:0px;">
-  <div class="navbar navbar-inverse navbar-static-top">
-    <div class="navbar-inner" style="background:#FFFFFF;">
-      <div class="container">
-        <div class="row">
-          <div class="col-sm-3 col-md-3 mt10">
-            <p><a href="#"><img src="https://tilson.theonecrm.co.uk/bookings/app/templates/portal/img/logo.png" alt="Logo"></a></p>
-          </div>
-          <div class="col-sm-5 col-md-5 mt70 pl0">
-            <div class="col-md-2 visible-md visible-lg">
-              <img src="https://tilson.theonecrm.co.uk/bookings/img.php?src=app/templates/default/images/no-picture-available.jpg&amp;w=50&amp;zc=1" alt="Profile Picture">
-            </div>
-            <div class="col-xs-10 col-sm-10 col-md-10">
-              Welcome, <b>Bradley Ayres</b>
-              <br>
-              <a href="#" class="btn btn-clear-3 btn-xs"><i class="fa fa-cogs"></i> My Settings</a>
-              <a href="#" class="btn btn-clear-3 btn-xs"><i class="fa fa-lock"></i> Logout</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ScaffoldFlow CRM</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>ScaffoldFlow CRM</h1>
+      <button id="newBookingBtn">+ New Booking</button>
+    </header>
 
-  <select id="navigation-small" class="form-control">
-    <option value="" selected>Go to...</option>
-    <option value="#">Admin</option>
-    <option value="#">Users</option>
-    <option value="#">Jobs</option>
-  </select>
+    <main class="layout">
+      <section class="panel">
+        <h2>Dashboard</h2>
+        <div class="stats" id="stats"></div>
 
-  <div class="container main-container">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="sidebar-nav hidden-tablet hidden-phone">
-          <ul class="nav nav-stacked left-menu">
-            <li><a href="#"><span class="box"><i class="fa fa-pie-chart"></i></span>Admin</a></li>
-            <li><a href="#"><span class="box"><i class="fa fa-folder"></i></span>Jobs</a></li>
-            <li><a href="#"><span class="box"><i class="fa fa-user"></i></span>Users</a></li>
-          </ul>
-        </div>
-
-        <div class="container-fluid content-wrapper">
-          <div class="row-fluid">
-            <p>
-              <button id="newJobBtn" class="btn btn-clear-3"><i class="fa fa-plus"></i> Add Job</button>
-              <button class="btn btn-clear-3"><i class="fa fa-plus"></i> Add Unavailability</button>
-              <button class="btn btn-clear-3"><i class="fa fa-calendar"></i> Bookings Calendar</button>
-            </p>
-
-            <form class="well">
-              <div class="row dashboard-cards" id="dashboard"></div>
-
-              <div class="row">
-                <div class="col-md-4">
-                  <div class="control-group">
-                    <label class="control-label" for="jobID">Job ID:</label>
-                    <div class="controls"><input id="jobID" class="form-control" type="text" placeholder="Filter by job id"></div>
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="control-group">
-                    <label class="control-label" for="jobDept">Dept:</label>
-                    <div class="controls"><input id="jobDept" class="form-control" type="text" placeholder="Filter by department"></div>
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="control-group">
-                    <label class="control-label" for="jobAddress">Address:</label>
-                    <div class="controls"><input id="jobAddress" class="form-control" type="text" placeholder="Filter by address"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-4">
-                  <div class="control-group">
-                    <label class="control-label" for="statusID">Status:</label>
-                    <select id="statusID" class="form-control">
-                      <option value="">Select</option>
-                      <option>Accepted</option>
-                      <option>Cancelled</option>
-                      <option>Completed</option>
-                      <option>In progress</option>
-                      <option>Pending</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="control-group">
-                    <label class="control-label" for="dates">Date Requested:</label>
-                    <input class="form-control" type="text" id="dates" placeholder="YYYY-MM-DD">
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <br><button id="applyFilterBtn" type="button" class="btn btn-clear-3"><i class="fa fa-refresh"></i> Apply Filter</button>
-                </div>
-              </div>
-              <p><span id="resultCount">0</span> Results</p>
-            </form>
-
-            <table class="table table-striped table-hover table-bordered responsive">
-              <thead>
+        <div class="tableWrap">
+          <table>
+            <thead>
               <tr>
-                <th style="width:60px;">Job ID</th>
-                <th>Dept</th>
-                <th>Location</th>
-                <th>Date Requested</th>
-                <th>Period</th>
+                <th>Job #</th>
+                <th>Client</th>
+                <th>Site</th>
+                <th>Start</th>
+                <th>End</th>
                 <th>Status</th>
-                <th>Scaffold Status</th>
-                <th>Added by</th>
-                <th>Added Date</th>
-                <th>Action</th>
+                <th></th>
               </tr>
-              </thead>
-              <tbody id="jobsTableBody"></tbody>
-            </table>
+            </thead>
+            <tbody id="bookingRows"></tbody>
+          </table>
+        </div>
+      </section>
 
-            <div class="calendar-panel">
-              <h4><i class="fa fa-calendar"></i> Booking Calendar</h4>
-              <div class="calendar-controls">
-                <button id="prevMonthBtn" class="btn btn-default btn-xs"><i class="fa fa-arrow-left"></i></button>
-                <strong id="monthLabel"></strong>
-                <button id="nextMonthBtn" class="btn btn-default btn-xs"><i class="fa fa-arrow-right"></i></button>
-              </div>
-              <div id="calendar" class="calendar-grid"></div>
-            </div>
+      <section class="panel">
+        <div class="calendarHeader">
+          <h2>Calendar</h2>
+          <div>
+            <button id="prevMonthBtn">◀</button>
+            <span id="monthLabel"></span>
+            <button id="nextMonthBtn">▶</button>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+        <div id="calendar" class="calendar"></div>
+      </section>
+    </main>
 
-  <footer class="black-gradient">
-    <div class="square-turtle pull-left"><p>© 2026 The One Point</p></div>
-  </footer>
+    <dialog id="bookingDialog">
+      <form id="bookingForm" method="dialog">
+        <h3 id="dialogTitle">Booking</h3>
 
-  <dialog id="editDialog" class="edit-dialog">
-    <form id="editForm" method="dialog">
-      <h4>View &amp; Update Job</h4>
-      <div class="row">
-        <div class="col-md-6"><label>Job ID<input class="form-control" name="jobID" required></label></div>
-        <div class="col-md-6"><label>Dept<input class="form-control" name="dept" required></label></div>
-        <div class="col-md-6"><label>Location<input class="form-control" name="location" required></label></div>
-        <div class="col-md-6"><label>Date Requested<input class="form-control" type="date" name="dateRequested" required></label></div>
-        <div class="col-md-6"><label>Period<select class="form-control" name="period"><option>AM</option><option>PM</option></select></label></div>
-        <div class="col-md-6"><label>Status<select class="form-control" name="status"><option>Pending</option><option>Accepted</option><option>In progress</option><option>Completed</option><option>Cancelled</option></select></label></div>
-        <div class="col-md-6"><label>Scaffold Status<select class="form-control" name="scaffoldStatus"><option>Pending</option><option>Waiting to be Erected</option><option>Erected</option><option>Waiting to be Dismantled</option><option>Dismantled</option></select></label></div>
-        <div class="col-md-6"><label>Added By<input class="form-control" name="addedBy"></label></div>
-        <div class="col-md-12"><label>Notes<textarea class="form-control" rows="3" name="notes"></textarea></label></div>
-      </div>
-      <div class="dialog-actions">
-        <button type="button" id="deleteBtn" class="btn btn-danger btn-xs">Delete</button>
-        <button type="button" id="cancelBtn" class="btn btn-default btn-xs">Cancel</button>
-        <button type="submit" class="btn btn-warning btn-xs"><i class="fa fa-edit"></i> Save Update</button>
-      </div>
-    </form>
-  </dialog>
+        <div class="grid">
+          <label>Job Number<input required name="jobNumber" /></label>
+          <label>Client Name<input required name="clientName" /></label>
+          <label>Site Address<input required name="siteAddress" /></label>
+          <label>Contact Phone<input name="contactPhone" /></label>
+          <label>Start Date<input required name="startDate" type="date" /></label>
+          <label>End Date<input required name="endDate" type="date" /></label>
+          <label>Team Size<input name="teamSize" type="number" min="1" /></label>
+          <label>
+            Status
+            <select name="status">
+              <option>Open</option>
+              <option>Scheduled</option>
+              <option>In Progress</option>
+              <option>Closed</option>
+            </select>
+          </label>
+          <label class="full">Notes<textarea name="notes" rows="3"></textarea></label>
+        </div>
 
-  <script src="app.js"></script>
-</body>
+        <menu>
+          <button type="button" id="deleteBtn" class="danger">Delete</button>
+          <button type="button" id="cancelBtn">Cancel</button>
+          <button type="submit" class="primary">Save Booking</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
 </html>
