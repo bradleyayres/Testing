@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ScaffoldFlow CRM</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>ScaffoldFlow CRM</h1>
+      <button id="newBookingBtn">+ New Booking</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <h2>Dashboard</h2>
+        <div class="stats" id="stats"></div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Job #</th>
+                <th>Client</th>
+                <th>Site</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="bookingRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="calendarHeader">
+          <h2>Calendar</h2>
+          <div>
+            <button id="prevMonthBtn">◀</button>
+            <span id="monthLabel"></span>
+            <button id="nextMonthBtn">▶</button>
+          </div>
+        </div>
+        <div id="calendar" class="calendar"></div>
+      </section>
+    </main>
+
+    <dialog id="bookingDialog">
+      <form id="bookingForm" method="dialog">
+        <h3 id="dialogTitle">Booking</h3>
+
+        <div class="grid">
+          <label>Job Number<input required name="jobNumber" /></label>
+          <label>Client Name<input required name="clientName" /></label>
+          <label>Site Address<input required name="siteAddress" /></label>
+          <label>Contact Phone<input name="contactPhone" /></label>
+          <label>Start Date<input required name="startDate" type="date" /></label>
+          <label>End Date<input required name="endDate" type="date" /></label>
+          <label>Team Size<input name="teamSize" type="number" min="1" /></label>
+          <label>
+            Status
+            <select name="status">
+              <option>Open</option>
+              <option>Scheduled</option>
+              <option>In Progress</option>
+              <option>Closed</option>
+            </select>
+          </label>
+          <label class="full">Notes<textarea name="notes" rows="3"></textarea></label>
+        </div>
+
+        <menu>
+          <button type="button" id="deleteBtn" class="danger">Delete</button>
+          <button type="button" id="cancelBtn">Cancel</button>
+          <button type="submit" class="primary">Save Booking</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
