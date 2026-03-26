@@ -1,100 +1,140 @@
-const STORAGE_KEY = "scaffoldflow_jobs_v3";
+const STORAGE_KEY = "scaffoldflow_bookings_v1";
 
-const seedJobs = [
+const seed = [
   {
     id: crypto.randomUUID(),
-    areaTown: "Leeds",
-    sorCode: "SOR-1001",
-    toBeConfirmed: "No",
-    purchaseNumber: "PO-9981",
-    jobNumber: "J-4501",
-    date: "2026-03-28",
-    amPm: "AM",
-    address: "12 Harper Road",
-    postCode: "LS1 2AB",
-    area: "North",
-    accessRequiredFor: "Roof edge work",
-    durationHireDays: "7",
-    operativeName: "James Cole",
-    operativeContact: "07123 456789",
-    supervisorName: "Nina Patel",
-    supervisorEmail: "nina@scaffoldflow.com",
-    comments: [{ text: "Initial booking created", createdAt: new Date().toISOString() }]
+    jobNumber: "SC-1042",
+    clientName: "Northside Builders",
+    siteAddress: "21 Market St",
+    contactPhone: "555-1299",
+    startDate: "2026-03-27",
+    endDate: "2026-04-03",
+    teamSize: 4,
+    status: "Scheduled",
+    notes: "Pedestrian tunnel required"
+  },
+  {
+    id: crypto.randomUUID(),
+    jobNumber: "SC-1043",
+    clientName: "Harper Roofing",
+    siteAddress: "88 Green Ave",
+    contactPhone: "555-4444",
+    startDate: "2026-03-29",
+    endDate: "2026-04-01",
+    teamSize: 3,
+    status: "Open",
+    notes: "Need edge protection"
   }
 ];
 
 const state = {
-  jobs: loadJobs(),
-  monthCursor: new Date(),
-  editingId: null,
-  draftComments: []
+  bookings: loadBookings(),
+  currentEditId: null,
+  monthCursor: new Date()
 };
 
-const dashboardView = document.getElementById("dashboardView");
-const calendarView = document.getElementById("calendarView");
-const calendarToggleBtn = document.getElementById("calendarToggleBtn");
-const jobsTableBody = document.getElementById("jobsTableBody");
-const dashboardCards = document.getElementById("dashboardCards");
+const bookingRows = document.getElementById("bookingRows");
+const stats = document.getElementById("stats");
+const bookingDialog = document.getElementById("bookingDialog");
+const bookingForm = document.getElementById("bookingForm");
+const dialogTitle = document.getElementById("dialogTitle");
+const deleteBtn = document.getElementById("deleteBtn");
 const monthLabel = document.getElementById("monthLabel");
 const calendar = document.getElementById("calendar");
-const jobDialog = document.getElementById("jobDialog");
-const jobForm = document.getElementById("jobForm");
-const dialogTitle = document.getElementById("dialogTitle");
-const commentsHistory = document.getElementById("commentsHistory");
-const newCommentInput = document.getElementById("newCommentInput");
 
-function loadJobs() {
+document.getElementById("newBookingBtn").addEventListener("click", openNew);
+document.getElementById("cancelBtn").addEventListener("click", () => bookingDialog.close());
+document.getElementById("prevMonthBtn").addEventListener("click", () => {
+  state.monthCursor.setMonth(state.monthCursor.getMonth() - 1);
+  renderCalendar();
+});
+document.getElementById("nextMonthBtn").addEventListener("click", () => {
+  state.monthCursor.setMonth(state.monthCursor.getMonth() + 1);
+  renderCalendar();
+});
+
+bookingForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const payload = Object.fromEntries(new FormData(bookingForm).entries());
+  payload.teamSize = Number(payload.teamSize || 0);
+
+  if (state.currentEditId) {
+    const idx = state.bookings.findIndex((b) => b.id === state.currentEditId);
+    state.bookings[idx] = { ...state.bookings[idx], ...payload };
+  } else {
+    state.bookings.push({ id: crypto.randomUUID(), ...payload });
+  }
+
+  persist();
+  bookingDialog.close();
+  draw();
+});
+
+deleteBtn.addEventListener("click", () => {
+  if (!state.currentEditId) return;
+  state.bookings = state.bookings.filter((b) => b.id !== state.currentEditId);
+  persist();
+  bookingDialog.close();
+  draw();
+});
+
+function loadBookings() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return seedJobs;
+  if (!raw) return seed;
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : seedJobs;
+    return Array.isArray(parsed) ? parsed : seed;
   } catch {
-    return seedJobs;
+    return seed;
   }
 }
 
-function saveJobs() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.jobs));
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.bookings));
 }
 
-function render() {
-  renderCards();
+function draw() {
+  renderStats();
   renderTable();
   renderCalendar();
 }
 
-function renderCards() {
-  const total = state.jobs.length;
-  const amCount = state.jobs.filter((j) => j.amPm === "AM").length;
-  const pmCount = state.jobs.filter((j) => j.amPm === "PM").length;
-  const tbcCount = state.jobs.filter((j) => (j.toBeConfirmed || "").toLowerCase() === "yes").length;
+function renderStats() {
+  const total = state.bookings.length;
+  const open = state.bookings.filter((b) => b.status === "Open").length;
+  const active = state.bookings.filter((b) => ["Scheduled", "In Progress"].includes(b.status)).length;
+  const closed = state.bookings.filter((b) => b.status === "Closed").length;
 
-  dashboardCards.innerHTML = [
-    ["Total Jobs", total],
-    ["AM Jobs", amCount],
-    ["PM Jobs", pmCount],
-    ["To Be Confirmed", tbcCount]
-  ].map(([label, value]) => `<article class="card"><div class="value">${value}</div><div>${label}</div></article>`).join("");
+  stats.innerHTML = [
+    [total, "Total Jobs"],
+    [open, "Open"],
+    [active, "Scheduled/In Progress"],
+    [closed, "Closed"]
+  ]
+    .map(([value, label]) => `<article class="stat"><strong>${value}</strong><span>${label}</span></article>`)
+    .join("");
 }
 
 function renderTable() {
-  jobsTableBody.innerHTML = state.jobs
+  bookingRows.innerHTML = state.bookings
     .slice()
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map((j) => `
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+    .map(
+      (b) => `
       <tr>
-        <td>${j.jobNumber}</td>
-        <td>${j.areaTown || ""}</td>
-        <td>${formatDate(j.date)}</td>
-        <td>${j.amPm || ""}</td>
-        <td>${j.sorCode || ""}</td>
-        <td>${j.operativeName || ""}</td>
-        <td><button class="btn btn-secondary open-btn" data-id="${j.id}">Open</button></td>
+        <td>${b.jobNumber}</td>
+        <td>${b.clientName}</td>
+        <td>${b.siteAddress}</td>
+        <td>${fmtDate(b.startDate)}</td>
+        <td>${fmtDate(b.endDate)}</td>
+        <td><span class="badge">${b.status}</span></td>
+        <td><button data-id="${b.id}" class="editBtn">Open</button></td>
       </tr>
-    `).join("");
+    `
+    )
+    .join("");
 
-  document.querySelectorAll(".open-btn").forEach((btn) => {
+  document.querySelectorAll(".editBtn").forEach((btn) => {
     btn.addEventListener("click", () => openEdit(btn.dataset.id));
   });
 }
@@ -104,121 +144,60 @@ function renderCalendar() {
   const month = first.getMonth();
   monthLabel.textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-  const parts = [];
-  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((d) => parts.push(`<div class="cal-head">${d}</div>`));
-  for (let i = 0; i < first.getDay(); i += 1) parts.push('<div class="cal-day cal-off"></div>');
+  const cells = [];
+  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((d) => {
+    cells.push(`<div class="dayHead">${d}</div>`);
+  });
+
+  for (let i = 0; i < first.getDay(); i += 1) {
+    cells.push('<div class="day empty"></div>');
+  }
 
   let day = 1;
   while (true) {
-    const dateObj = new Date(first.getFullYear(), first.getMonth(), day);
-    if (dateObj.getMonth() !== month) break;
-    const iso = dateObj.toISOString().slice(0, 10);
-    const dayJobs = state.jobs.filter((j) => j.date === iso);
+    const date = new Date(first.getFullYear(), first.getMonth(), day);
+    if (date.getMonth() !== month) break;
 
-    parts.push(`<div class="cal-day"><div>${day}</div>${dayJobs.map((j) => `<div class="cal-badge">${j.jobNumber} ${j.amPm}</div>`).join("")}</div>`);
+    const iso = date.toISOString().slice(0, 10);
+    const events = state.bookings.filter((b) => iso >= b.startDate && iso <= b.endDate);
+
+    cells.push(`
+      <div class="day">
+        <div class="dateNum">${day}</div>
+        ${events.map((e) => `<div class="event" title="${e.jobNumber}: ${e.clientName}">${e.jobNumber}</div>`).join("")}
+      </div>
+    `);
     day += 1;
   }
 
-  calendar.innerHTML = parts.join("");
-}
-
-function formatDate(iso) {
-  if (!iso) return "";
-  return new Date(`${iso}T00:00:00`).toLocaleDateString();
+  calendar.innerHTML = cells.join("");
 }
 
 function openNew() {
-  state.editingId = null;
-  state.draftComments = [];
-  dialogTitle.textContent = "Add Job";
-  jobForm.reset();
-  renderComments();
-  document.getElementById("deleteBtn").style.display = "none";
-  jobDialog.showModal();
+  state.currentEditId = null;
+  dialogTitle.textContent = "Create Booking";
+  bookingForm.reset();
+  deleteBtn.style.display = "none";
+  bookingDialog.showModal();
 }
 
 function openEdit(id) {
-  const job = state.jobs.find((j) => j.id === id);
-  if (!job) return;
-  state.editingId = id;
-  state.draftComments = Array.isArray(job.comments) ? [...job.comments] : [];
-  dialogTitle.textContent = `Edit Job ${job.jobNumber}`;
-  for (const [k, v] of Object.entries(job)) {
-    if (jobForm.elements[k]) jobForm.elements[k].value = v;
-  }
-  renderComments();
-  document.getElementById("deleteBtn").style.display = "inline-block";
-  jobDialog.showModal();
-}
+  const booking = state.bookings.find((b) => b.id === id);
+  if (!booking) return;
 
-function renderComments() {
-  commentsHistory.innerHTML = state.draftComments.length
-    ? state.draftComments.map((c) => `<div class="comment-item">${escapeHtml(c.text)}<small>${new Date(c.createdAt).toLocaleString()}</small></div>`).join("")
-    : '<div class="comment-item"><small>No comments yet.</small></div>';
-}
+  state.currentEditId = id;
+  dialogTitle.textContent = `Edit ${booking.jobNumber}`;
+  deleteBtn.style.display = "inline-block";
 
-function escapeHtml(text) {
-  return String(text)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function toggleView() {
-  const showCalendar = !calendarView.classList.contains("active");
-  dashboardView.classList.toggle("active", !showCalendar);
-  calendarView.classList.toggle("active", showCalendar);
-  calendarToggleBtn.textContent = showCalendar ? "Dashboard" : "Bookings Calendar";
-}
-
-document.getElementById("newBookingBtn").addEventListener("click", openNew);
-calendarToggleBtn.addEventListener("click", toggleView);
-
-document.getElementById("prevMonthBtn").addEventListener("click", () => {
-  state.monthCursor.setMonth(state.monthCursor.getMonth() - 1);
-  renderCalendar();
-});
-
-document.getElementById("nextMonthBtn").addEventListener("click", () => {
-  state.monthCursor.setMonth(state.monthCursor.getMonth() + 1);
-  renderCalendar();
-});
-
-document.getElementById("cancelBtn").addEventListener("click", () => jobDialog.close());
-
-document.getElementById("deleteBtn").addEventListener("click", () => {
-  if (!state.editingId) return;
-  state.jobs = state.jobs.filter((j) => j.id !== state.editingId);
-  saveJobs();
-  jobDialog.close();
-  render();
-});
-
-document.getElementById("addCommentBtn").addEventListener("click", () => {
-  const text = newCommentInput.value.trim();
-  if (!text) return;
-  state.draftComments.push({ text, createdAt: new Date().toISOString() });
-  newCommentInput.value = "";
-  renderComments();
-});
-
-jobForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const payload = Object.fromEntries(new FormData(jobForm).entries());
-  payload.comments = state.draftComments;
-
-  if (state.editingId) {
-    const idx = state.jobs.findIndex((j) => j.id === state.editingId);
-    state.jobs[idx] = { ...state.jobs[idx], ...payload };
-  } else {
-    state.jobs.push({ id: crypto.randomUUID(), ...payload });
+  for (const [key, value] of Object.entries(booking)) {
+    if (bookingForm.elements[key]) bookingForm.elements[key].value = value;
   }
 
-  saveJobs();
-  jobDialog.close();
-  render();
-});
+  bookingDialog.showModal();
+}
 
-render();
+function fmtDate(iso) {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString();
+}
+
+draw();
