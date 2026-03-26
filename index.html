@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScaffoldFlow CRM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-row">
+      <h1>ScaffoldFlow CRM</h1>
+      <button id="newBookingBtn" class="btn btn-main">+ New Booking</button>
+      <button id="calendarToggleBtn" class="btn btn-main">Bookings Calendar</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section id="dashboardView" class="view active">
+      <div id="dashboardCards" class="cards"></div>
+
+      <section class="panel">
+        <h2>Dashboard</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Job Number</th>
+              <th>Area/Town</th>
+              <th>Date</th>
+              <th>AM/PM</th>
+              <th>SOR Code</th>
+              <th>Operative</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="jobsTableBody"></tbody>
+        </table>
+      </section>
+    </section>
+
+    <section id="calendarView" class="view">
+      <section class="panel">
+        <div class="calendar-top">
+          <h2>Bookings Calendar</h2>
+          <div>
+            <button id="prevMonthBtn" class="btn">◀</button>
+            <span id="monthLabel"></span>
+            <button id="nextMonthBtn" class="btn">▶</button>
+          </div>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="jobModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Job</h3>
+        <button id="closeModalBtn" class="btn">✕</button>
+      </div>
+
+      <form id="jobForm">
+        <div class="form-grid">
+          <label>Area/Town:<input name="areaTown" required /></label>
+          <label>* SOR Code:<input name="sorCode" required /></label>
+          <label>To Be Confirmed<input name="toBeConfirmed" /></label>
+          <label>Purchase Number:<input name="purchaseNumber" /></label>
+          <label>* Job Number:<input name="jobNumber" required /></label>
+          <label>* Date:<input type="date" name="date" required /></label>
+          <label>* AM/PM:
+            <select name="amPm" required>
+              <option value="">Select</option>
+              <option>AM</option>
+              <option>PM</option>
+            </select>
+          </label>
+          <label>* Address:<input name="address" required /></label>
+          <label>* Post Code:<input name="postCode" required /></label>
+          <label>Area:<input name="area" /></label>
+          <label>Access Required for:<input name="accessRequiredFor" /></label>
+          <label>Duration of Hire (days):<input type="number" min="1" name="durationHireDays" /></label>
+          <label>Operative name:<input name="operativeName" /></label>
+          <label>Operative's contact number:<input name="operativeContact" /></label>
+          <label>Supervisor Name<input name="supervisorName" /></label>
+          <label>Supervisor Email<input type="email" name="supervisorEmail" /></label>
+        </div>
+
+        <section class="comments-box">
+          <h4>Live Track Comments</h4>
+          <div id="commentsHistory" class="comments-history"></div>
+          <div class="comment-row">
+            <input id="commentInput" type="text" placeholder="Write update comment..." />
+            <button type="button" id="addCommentBtn" class="btn btn-secondary">Add Comment</button>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button type="button" id="deleteBtn" class="btn btn-danger">Delete</button>
+          <button type="button" id="cancelBtn" class="btn">Cancel</button>
+          <button type="submit" class="btn btn-main">Save Job</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
