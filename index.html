@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScaffoldFlow CRM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title-row">
+      <h1>ScaffoldFlow CRM</h1>
+      <button id="newBookingBtn" class="btn btn-main">+ New Booking</button>
+      <button id="calendarToggleBtn" class="btn btn-main">Bookings Calendar</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="dashboardView" class="view active">
+      <div class="cards" id="dashboardCards"></div>
+
+      <div class="table-panel">
+        <h2>Open Jobs Dashboard</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Job Number</th>
+              <th>Area/Town</th>
+              <th>Date</th>
+              <th>AM/PM</th>
+              <th>SOR Code</th>
+              <th>Operative</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="jobsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="calendarView" class="view">
+      <div class="calendar-panel">
+        <div class="calendar-head">
+          <h2>Bookings Calendar</h2>
+          <div>
+            <button id="prevMonthBtn" class="btn">◀</button>
+            <span id="monthLabel"></span>
+            <button id="nextMonthBtn" class="btn">▶</button>
+          </div>
+        </div>
+        <div id="calendar" class="calendar-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="jobDialog">
+    <form id="jobForm" method="dialog">
+      <h3 id="dialogTitle">Add Job</h3>
+      <div class="form-grid">
+        <label>Area/Town:<input name="areaTown" required></label>
+        <label>* SOR Code:<input name="sorCode" required></label>
+        <label>To Be Confirmed<input name="toBeConfirmed"></label>
+        <label>Purchase Number:<input name="purchaseNumber"></label>
+        <label>* Job Number:<input name="jobNumber" required></label>
+        <label>* Date:<input type="date" name="date" required></label>
+        <label>* AM/PM:
+          <select name="amPm" required>
+            <option value="">Select</option>
+            <option>AM</option>
+            <option>PM</option>
+          </select>
+        </label>
+        <label>* Address:<input name="address" required></label>
+        <label>* Post Code:<input name="postCode" required></label>
+        <label>Area:<input name="area"></label>
+        <label>Access Required for:<input name="accessRequiredFor"></label>
+        <label>Duration of Hire (days):<input type="number" min="1" name="durationHireDays"></label>
+        <label>Operative name:<input name="operativeName"></label>
+        <label>Operative's contact number:<input name="operativeContact"></label>
+        <label>Supervisor Name<input name="supervisorName"></label>
+        <label>Supervisor Email<input type="email" name="supervisorEmail"></label>
+      </div>
+
+      <section class="comments-panel">
+        <h4>Live Track Comments</h4>
+        <div id="commentsHistory" class="comments-history"></div>
+        <div class="comment-entry">
+          <input id="newCommentInput" type="text" placeholder="Add a new comment update...">
+          <button type="button" id="addCommentBtn" class="btn btn-secondary">Add Comment</button>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="button" id="deleteBtn" class="btn btn-danger">Delete</button>
+        <button type="button" id="cancelBtn" class="btn">Cancel</button>
+        <button type="submit" class="btn btn-main">Save Job</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
