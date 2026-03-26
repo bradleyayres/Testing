@@ -1,132 +1,140 @@
-const STORAGE_KEY = "scaffoldflow_jobs_v4";
+const STORAGE_KEY = "scaffoldflow_bookings_v1";
 
-const seedJobs = [
+const seed = [
   {
     id: crypto.randomUUID(),
-    areaTown: "Leeds",
-    sorCode: "SOR-1001",
-    toBeConfirmed: "No",
-    purchaseNumber: "PO-9981",
-    jobNumber: "J-4501",
-    date: "2026-03-28",
-    amPm: "AM",
-    address: "12 Harper Road",
-    postCode: "LS1 2AB",
-    area: "North",
-    accessRequiredFor: "Roof edge work",
-    durationHireDays: "7",
-    operativeName: "James Cole",
-    operativeContact: "07123 456789",
-    supervisorName: "Nina Patel",
-    supervisorEmail: "nina@scaffoldflow.com",
-    comments: [{ text: "Initial booking created", createdAt: new Date().toISOString() }]
+    jobNumber: "SC-1042",
+    clientName: "Northside Builders",
+    siteAddress: "21 Market St",
+    contactPhone: "555-1299",
+    startDate: "2026-03-27",
+    endDate: "2026-04-03",
+    teamSize: 4,
+    status: "Scheduled",
+    notes: "Pedestrian tunnel required"
+  },
+  {
+    id: crypto.randomUUID(),
+    jobNumber: "SC-1043",
+    clientName: "Harper Roofing",
+    siteAddress: "88 Green Ave",
+    contactPhone: "555-4444",
+    startDate: "2026-03-29",
+    endDate: "2026-04-01",
+    teamSize: 3,
+    status: "Open",
+    notes: "Need edge protection"
   }
 ];
 
 const state = {
-  jobs: loadJobs(),
-  monthCursor: new Date(),
-  editingId: null,
-  draftComments: []
+  bookings: loadBookings(),
+  currentEditId: null,
+  monthCursor: new Date()
 };
 
-const els = {
-  dashboardView: document.getElementById("dashboardView"),
-  calendarView: document.getElementById("calendarView"),
-  calendarToggleBtn: document.getElementById("calendarToggleBtn"),
-  dashboardCards: document.getElementById("dashboardCards"),
-  jobsTableBody: document.getElementById("jobsTableBody"),
-  monthLabel: document.getElementById("monthLabel"),
-  calendarGrid: document.getElementById("calendarGrid"),
-  jobModal: document.getElementById("jobModal"),
-  modalTitle: document.getElementById("modalTitle"),
-  jobForm: document.getElementById("jobForm"),
-  deleteBtn: document.getElementById("deleteBtn"),
-  commentsHistory: document.getElementById("commentsHistory"),
-  commentInput: document.getElementById("commentInput")
-};
+const bookingRows = document.getElementById("bookingRows");
+const stats = document.getElementById("stats");
+const bookingDialog = document.getElementById("bookingDialog");
+const bookingForm = document.getElementById("bookingForm");
+const dialogTitle = document.getElementById("dialogTitle");
+const deleteBtn = document.getElementById("deleteBtn");
+const monthLabel = document.getElementById("monthLabel");
+const calendar = document.getElementById("calendar");
 
-function loadJobs() {
+document.getElementById("newBookingBtn").addEventListener("click", openNew);
+document.getElementById("cancelBtn").addEventListener("click", () => bookingDialog.close());
+document.getElementById("prevMonthBtn").addEventListener("click", () => {
+  state.monthCursor.setMonth(state.monthCursor.getMonth() - 1);
+  renderCalendar();
+});
+document.getElementById("nextMonthBtn").addEventListener("click", () => {
+  state.monthCursor.setMonth(state.monthCursor.getMonth() + 1);
+  renderCalendar();
+});
+
+bookingForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const payload = Object.fromEntries(new FormData(bookingForm).entries());
+  payload.teamSize = Number(payload.teamSize || 0);
+
+  if (state.currentEditId) {
+    const idx = state.bookings.findIndex((b) => b.id === state.currentEditId);
+    state.bookings[idx] = { ...state.bookings[idx], ...payload };
+  } else {
+    state.bookings.push({ id: crypto.randomUUID(), ...payload });
+  }
+
+  persist();
+  bookingDialog.close();
+  draw();
+});
+
+deleteBtn.addEventListener("click", () => {
+  if (!state.currentEditId) return;
+  state.bookings = state.bookings.filter((b) => b.id !== state.currentEditId);
+  persist();
+  bookingDialog.close();
+  draw();
+});
+
+function loadBookings() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return seed;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return seedJobs;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalizeJob) : seedJobs;
+    return Array.isArray(parsed) ? parsed : seed;
   } catch {
-    return seedJobs;
+    return seed;
   }
 }
 
-function saveJobs() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.jobs));
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.bookings));
 }
 
-function normalizeJob(job) {
-  const j = job || {};
-  return {
-    id: j.id || crypto.randomUUID(),
-    areaTown: j.areaTown || "",
-    sorCode: j.sorCode || "",
-    toBeConfirmed: j.toBeConfirmed || "",
-    purchaseNumber: j.purchaseNumber || "",
-    jobNumber: j.jobNumber || "",
-    date: j.date || "",
-    amPm: j.amPm || "",
-    address: j.address || "",
-    postCode: j.postCode || "",
-    area: j.area || "",
-    accessRequiredFor: j.accessRequiredFor || "",
-    durationHireDays: j.durationHireDays || "",
-    operativeName: j.operativeName || "",
-    operativeContact: j.operativeContact || "",
-    supervisorName: j.supervisorName || "",
-    supervisorEmail: j.supervisorEmail || "",
-    comments: Array.isArray(j.comments)
-      ? j.comments.map((c) => ({ text: String(c.text || ""), createdAt: c.createdAt || new Date().toISOString() }))
-      : []
-  };
-}
-
-function render() {
-  renderCards();
+function draw() {
+  renderStats();
   renderTable();
   renderCalendar();
 }
 
-function renderCards() {
-  const total = state.jobs.length;
-  const amCount = state.jobs.filter((j) => j.amPm === "AM").length;
-  const pmCount = state.jobs.filter((j) => j.amPm === "PM").length;
-  const withComments = state.jobs.filter((j) => j.comments && j.comments.length).length;
+function renderStats() {
+  const total = state.bookings.length;
+  const open = state.bookings.filter((b) => b.status === "Open").length;
+  const active = state.bookings.filter((b) => ["Scheduled", "In Progress"].includes(b.status)).length;
+  const closed = state.bookings.filter((b) => b.status === "Closed").length;
 
-  els.dashboardCards.innerHTML = [
-    ["Total Jobs", total],
-    ["AM Bookings", amCount],
-    ["PM Bookings", pmCount],
-    ["With Comments", withComments]
-  ].map(([label, value]) => `<article class="card"><div class="value">${value}</div><div>${label}</div></article>`).join("");
+  stats.innerHTML = [
+    [total, "Total Jobs"],
+    [open, "Open"],
+    [active, "Scheduled/In Progress"],
+    [closed, "Closed"]
+  ]
+    .map(([value, label]) => `<article class="stat"><strong>${value}</strong><span>${label}</span></article>`)
+    .join("");
 }
 
 function renderTable() {
-  const rows = state.jobs
+  bookingRows.innerHTML = state.bookings
     .slice()
-    .sort((a, b) => new Date(a.date || "2100-01-01") - new Date(b.date || "2100-01-01"))
-    .map((job) => `
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+    .map(
+      (b) => `
       <tr>
-        <td>${esc(job.jobNumber)}</td>
-        <td>${esc(job.areaTown)}</td>
-        <td>${formatDate(job.date)}</td>
-        <td>${esc(job.amPm)}</td>
-        <td>${esc(job.sorCode)}</td>
-        <td>${esc(job.operativeName)}</td>
-        <td><button class="btn btn-secondary open-job" data-id="${job.id}">Open</button></td>
+        <td>${b.jobNumber}</td>
+        <td>${b.clientName}</td>
+        <td>${b.siteAddress}</td>
+        <td>${fmtDate(b.startDate)}</td>
+        <td>${fmtDate(b.endDate)}</td>
+        <td><span class="badge">${b.status}</span></td>
+        <td><button data-id="${b.id}" class="editBtn">Open</button></td>
       </tr>
-    `)
+    `
+    )
     .join("");
 
-  els.jobsTableBody.innerHTML = rows || '<tr><td colspan="7">No jobs yet.</td></tr>';
-
-  document.querySelectorAll(".open-job").forEach((btn) => {
+  document.querySelectorAll(".editBtn").forEach((btn) => {
     btn.addEventListener("click", () => openEdit(btn.dataset.id));
   });
 }
@@ -134,139 +142,62 @@ function renderTable() {
 function renderCalendar() {
   const first = new Date(state.monthCursor.getFullYear(), state.monthCursor.getMonth(), 1);
   const month = first.getMonth();
-  els.monthLabel.textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  monthLabel.textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-  const html = [];
-  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((d) => html.push(`<div class="c-head">${d}</div>`));
-  for (let i = 0; i < first.getDay(); i += 1) html.push('<div class="c-day c-off"></div>');
+  const cells = [];
+  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((d) => {
+    cells.push(`<div class="dayHead">${d}</div>`);
+  });
+
+  for (let i = 0; i < first.getDay(); i += 1) {
+    cells.push('<div class="day empty"></div>');
+  }
 
   let day = 1;
   while (true) {
-    const dateObj = new Date(first.getFullYear(), first.getMonth(), day);
-    if (dateObj.getMonth() !== month) break;
-    const iso = dateObj.toISOString().slice(0, 10);
-    const matches = state.jobs.filter((j) => j.date === iso);
-    html.push(`<div class="c-day"><div>${day}</div>${matches.map((m) => `<div class="c-badge">${esc(m.jobNumber)} ${esc(m.amPm)}</div>`).join("")}</div>`);
+    const date = new Date(first.getFullYear(), first.getMonth(), day);
+    if (date.getMonth() !== month) break;
+
+    const iso = date.toISOString().slice(0, 10);
+    const events = state.bookings.filter((b) => iso >= b.startDate && iso <= b.endDate);
+
+    cells.push(`
+      <div class="day">
+        <div class="dateNum">${day}</div>
+        ${events.map((e) => `<div class="event" title="${e.jobNumber}: ${e.clientName}">${e.jobNumber}</div>`).join("")}
+      </div>
+    `);
     day += 1;
   }
 
-  els.calendarGrid.innerHTML = html.join("");
-}
-
-function openModal() {
-  els.jobModal.classList.remove("hidden");
-  els.jobModal.setAttribute("aria-hidden", "false");
-}
-
-function closeModal() {
-  els.jobModal.classList.add("hidden");
-  els.jobModal.setAttribute("aria-hidden", "true");
+  calendar.innerHTML = cells.join("");
 }
 
 function openNew() {
-  state.editingId = null;
-  state.draftComments = [];
-  els.modalTitle.textContent = "Add Job";
-  els.jobForm.reset();
-  els.deleteBtn.style.display = "none";
-  renderComments();
-  openModal();
+  state.currentEditId = null;
+  dialogTitle.textContent = "Create Booking";
+  bookingForm.reset();
+  deleteBtn.style.display = "none";
+  bookingDialog.showModal();
 }
 
 function openEdit(id) {
-  const job = state.jobs.find((j) => j.id === id);
-  if (!job) return;
+  const booking = state.bookings.find((b) => b.id === id);
+  if (!booking) return;
 
-  state.editingId = id;
-  state.draftComments = Array.isArray(job.comments) ? [...job.comments] : [];
-  els.modalTitle.textContent = `Edit Job ${job.jobNumber}`;
-  Object.entries(job).forEach(([k, v]) => {
-    if (els.jobForm.elements[k]) els.jobForm.elements[k].value = v;
-  });
-  els.deleteBtn.style.display = "inline-block";
-  renderComments();
-  openModal();
-}
+  state.currentEditId = id;
+  dialogTitle.textContent = `Edit ${booking.jobNumber}`;
+  deleteBtn.style.display = "inline-block";
 
-function renderComments() {
-  if (!state.draftComments.length) {
-    els.commentsHistory.innerHTML = '<div class="comment-item"><small>No comments yet.</small></div>';
-    return;
+  for (const [key, value] of Object.entries(booking)) {
+    if (bookingForm.elements[key]) bookingForm.elements[key].value = value;
   }
 
-  els.commentsHistory.innerHTML = state.draftComments
-    .map((c) => `<div class="comment-item">${esc(c.text)}<small>${new Date(c.createdAt).toLocaleString()}</small></div>`)
-    .join("");
+  bookingDialog.showModal();
 }
 
-function toggleView() {
-  const showCalendar = !els.calendarView.classList.contains("active");
-  els.dashboardView.classList.toggle("active", !showCalendar);
-  els.calendarView.classList.toggle("active", showCalendar);
-  els.calendarToggleBtn.textContent = showCalendar ? "Dashboard" : "Bookings Calendar";
+function fmtDate(iso) {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString();
 }
 
-function esc(value) {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function formatDate(iso) {
-  if (!iso) return "";
-  const d = new Date(`${iso}T00:00:00`);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString();
-}
-
-document.getElementById("newBookingBtn").addEventListener("click", openNew);
-els.calendarToggleBtn.addEventListener("click", toggleView);
-document.getElementById("closeModalBtn").addEventListener("click", closeModal);
-document.getElementById("cancelBtn").addEventListener("click", closeModal);
-
-document.getElementById("addCommentBtn").addEventListener("click", () => {
-  const text = els.commentInput.value.trim();
-  if (!text) return;
-  state.draftComments.push({ text, createdAt: new Date().toISOString() });
-  els.commentInput.value = "";
-  renderComments();
-});
-
-document.getElementById("deleteBtn").addEventListener("click", () => {
-  if (!state.editingId) return;
-  state.jobs = state.jobs.filter((j) => j.id !== state.editingId);
-  saveJobs();
-  closeModal();
-  render();
-});
-
-document.getElementById("prevMonthBtn").addEventListener("click", () => {
-  state.monthCursor.setMonth(state.monthCursor.getMonth() - 1);
-  renderCalendar();
-});
-
-document.getElementById("nextMonthBtn").addEventListener("click", () => {
-  state.monthCursor.setMonth(state.monthCursor.getMonth() + 1);
-  renderCalendar();
-});
-
-els.jobForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const payload = normalizeJob(Object.fromEntries(new FormData(els.jobForm).entries()));
-  payload.comments = state.draftComments;
-
-  if (state.editingId) {
-    const index = state.jobs.findIndex((j) => j.id === state.editingId);
-    if (index >= 0) state.jobs[index] = { ...state.jobs[index], ...payload, id: state.editingId };
-  } else {
-    state.jobs.push({ ...payload, id: crypto.randomUUID() });
-  }
-
-  saveJobs();
-  closeModal();
-  render();
-});
-
-render();
+draw();
